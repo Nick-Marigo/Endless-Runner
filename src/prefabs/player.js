@@ -8,11 +8,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setCollideWorldBounds(true);
 
         this.direction = direction;
-        
-        /*this.baseRunSpeed = 100;
-        this.speedAdjust = 120;
-        this.maxRunSpeed = 380;
-        this.minRunSpeed = -160;*/
 
         this.scrollSpeed = 100;
         this.playerMoveVelocity = 300;
@@ -35,7 +30,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         let vx = 0;
 
         if(D.isDown) vx += this.playerMoveVelocity; 
-        if(A.isDown) vx -= this.playerMoveVelocity;
+        if(A.isDown) vx -= this.playerMoveVelocity / 3;
 
         this.setVelocityX(vx - this.scrollSpeed);
         
@@ -115,49 +110,3 @@ class SlideState extends State {
         }
     }
 }
-
-// Player States
-/*class IdleState extends State { 
-    enter(scene, player) {
-        player.setVelocity(0);
-        //player.anims.play('idle-' + player.direction, true);
-        //player.anims.stop();
-    }
-
-    execute(scene, player) {
-        const { A, D, JUMP, DOWN } = scene.keys;
-
-        if(A.isDown || D.isDown || JUMP.isDown || DOWN.isDown) {
-            this.stateMachine.transition('move');
-        }
-    }
-}
-
-class MoveState extends State {
-    
-    execute(scene, player) {
-
-        const { A, D, JUMP, DOWN } = scene.keys;
-
-        if(!(A.isDown || D.isDown || JUMP.isDown || DOWN.isDown)) {
-            this.stateMachine.transition('idle');
-            return;
-        }
-
-        let moveDirection = new Phaser.Math.Vector2(0, 0);
-        if(D.isDown) {
-            moveDirection.x = 1;
-            player.direction = 'right';
-        } else if(A.isDown) {
-            moveDirection.x = -1;
-            player.direction = 'left';
-        }
-
-        moveDirection.normalize();
-        player.setVelocity(player.playerVelocity * moveDirection.x, player.playerVelocity * moveDirection.y);
-        //player.anims.play('run-' + player.direction, true);
-
-    }
-
-
-}*/

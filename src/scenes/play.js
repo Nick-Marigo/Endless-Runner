@@ -18,10 +18,6 @@ class Play extends Phaser.Scene{
     create(){
 
         this.background = this.add.tileSprite(0, 0, width, height, 'background').setOrigin(0, 0);
-        /*this.platforms = this.physics.add.group({ immovable: true, allowGravity: false });
-        const p = this.platforms.create(width /2, height -100, 'platform').setOrigin(0.5, 0.5);
-        p.setImmovable(true);
-        p.body.allowGravity = false;*/
 
         this.keys = this.input.keyboard.addKeys({
             W: Phaser.Input.Keyboard.KeyCodes.W,     // JUMP
@@ -54,6 +50,13 @@ class Play extends Phaser.Scene{
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true;
             this.physics.world.debugGraphic.clear();
         }, this);
+
+        this.changeGravity = this.time.addEvent({
+            delay: 5000,
+            callback: this.changeGravityDirection,
+            callbackScope: this,
+            loop: true
+        });
 
     }
 
@@ -88,6 +91,35 @@ class Play extends Phaser.Scene{
             console.log("Game Over");
 
         }
+
+        console.log(`VelX: ${this.player.body.velocity.x}, AccelX: ${this.player.body.acceleration.x}`);
+}
+
+    
+
+    changeGravityDirection() {
+
+        const gravityKeys = Object.keys(gravityDir);
+        let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
+
+        currentGravity = newGravity;
+
+        const strength = 500;
+
+        const newX = gravityDir[newGravity].x * strength;
+        const newY = gravityDir[newGravity].y * strength;
+
+        this.physics.world.gravity.set(newX, newY);
+
+        this.player.body.setGravity(0, 0);
+
+        console.log("Changing gravity direction to:", currentGravity);
+
+        /*this.player.body.setGravityX(gravityDir[newGravity].x * 500);
+        this.player.body.setGravityY(gravityDir[newGravity].y * 500);
+
+        this.physics.world.gravity.x = gravityDir[newGravity].x * 500;
+        this.physics.world.gravity.y = gravityDir[newGravity].y * 500;*/
 
     }
 
