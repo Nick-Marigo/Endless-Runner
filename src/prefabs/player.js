@@ -27,13 +27,34 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         
         const { A, D } = scene.keys;
 
-        let vx = 0;
+        const flowDirection = directions[currentDirection];
+        //const gravityVector = gravityDir[currentGravity];
 
-        if(D.isDown) vx += this.playerMoveVelocity; 
-        if(A.isDown) vx -= this.playerMoveVelocity / 3;
+        //console.log(`Flow Direction: ${flowDirection}`);
 
-        this.setVelocityX(vx - this.scrollSpeed);
+        // Calculate player speed (D = Forward, A = Backward)
+        let moveMagnitude = 0;
+        if(D.isDown) moveMagnitude += this.playerMoveVelocity; 
+        if(A.isDown) moveMagnitude -= (this.playerMoveVelocity / 3);
+
+        if(flowDirection.x !== 0) {
+            this.setVelocityX(flowDirection.x * moveMagnitude);
+        } else if (flowDirection.y !== 0) {
+            this.setVelocityY(flowDirection.y * moveMagnitude);
+        }
         
+    }
+
+    // Helper function to determine if player is grounded in any direction
+    isGrounded() {
+        const gravity = this.scene.physics.world.gravity;
+        switch(currentGravity) {
+            case 'down': return this.body.blocked.down;
+            case 'up': return this.body.blocked.up;
+            case 'left': return this.body.blocked.left;
+            case 'right': return this.body.blocked.right;
+        }
+        return false;
     }
 
 }

@@ -51,9 +51,9 @@ class Play extends Phaser.Scene{
             this.physics.world.debugGraphic.clear();
         }, this);
 
-        this.changeGravity = this.time.addEvent({
+        this.changeGravAndDir = this.time.addEvent({
             delay: 5000,
-            callback: this.changeGravityDirection,
+            callback: this.changeGravityAndDirection,
             callbackScope: this,
             loop: true
         });
@@ -92,34 +92,32 @@ class Play extends Phaser.Scene{
 
         }
 
-        console.log(`VelX: ${this.player.body.velocity.x}, AccelX: ${this.player.body.acceleration.x}`);
-}
+        //console.log(`VelX: ${this.player.body.velocity.x}, AccelX: ${this.player.body.acceleration.x}`);
+    }
 
-    
-
-    changeGravityDirection() {
-
+    changeGravityAndDirection() {
         const gravityKeys = Object.keys(gravityDir);
-        let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
 
+        // get random gravity direction that is not the current one
+        let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
         currentGravity = newGravity;
 
+        // Filter directions to only those perpendicular to the new gravity
+        // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
+        const validDirections = Object.keys(directions).filter(d => {
+            const gravityVec = gravityDir[newGravity];
+            const dirVec = directions[d];
+            // If gravity uses Y, direction must use X, and vice versa
+            return gravityVec.y !== 0 ? dirVec.x !== 0 : dirVec.y !== 0;
+        });
+
+        let newDirection = Phaser.Utils.Array.GetRandom(validDirections);
+        currentDirection = newDirection;
+
         const strength = 500;
+        this.physics.world.gravity.set(gravityDir[newGravity].x * strength, gravityDir[newGravity].y * strength);
 
-        const newX = gravityDir[newGravity].x * strength;
-        const newY = gravityDir[newGravity].y * strength;
-
-        this.physics.world.gravity.set(newX, newY);
-
-        this.player.body.setGravity(0, 0);
-
-        console.log("Changing gravity direction to:", currentGravity);
-
-        /*this.player.body.setGravityX(gravityDir[newGravity].x * 500);
-        this.player.body.setGravityY(gravityDir[newGravity].y * 500);
-
-        this.physics.world.gravity.x = gravityDir[newGravity].x * 500;
-        this.physics.world.gravity.y = gravityDir[newGravity].y * 500;*/
+        console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
 
     }
 
