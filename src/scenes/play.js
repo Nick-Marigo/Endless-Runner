@@ -43,6 +43,7 @@ class Play extends Phaser.Scene{
         }
 
         this.player = new Player(this, width / 2, 650, 'player', 0, 'right');
+        this.player.setDisplaySize(48, 64);
 
         this.physics.add.collider(this.player, this.platforms);
 
