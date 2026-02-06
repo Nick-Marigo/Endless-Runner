@@ -89,11 +89,9 @@ class Play extends Phaser.Scene{
             
             if (flowVec.y > 0 && p.y + p.height < 0) p.y = height;
             else if (flowVec.y < 0 && p.y > height) p.y = -p.height;
-            //p.x -= this.scrollSpeed * dt;
         }
 
         let rightMostX = -Infinity;
-
         for(const p of platforms) rightMostX = Math.max(rightMostX, p.x);
 
         const platformWidth = 900;
