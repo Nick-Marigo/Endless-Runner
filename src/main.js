@@ -46,3 +46,10 @@ const directions = {
 }
 
 let currentDirection = 'right';
+
+const gravityAngles = {
+    down: 0,
+    left: 90,
+    up: 180,
+    right: 270
+}

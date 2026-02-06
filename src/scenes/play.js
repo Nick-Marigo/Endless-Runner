@@ -31,7 +31,7 @@ class Play extends Phaser.Scene{
         this.platforms = this.physics.add.group({ immovable: true, allowGravity: false });
 
         const platformWidth = 900;
-        const y = height - 100;
+        const y = height - 50;
 
         const count = Math.ceil(width / platformWidth) + 2;
 
@@ -53,7 +53,7 @@ class Play extends Phaser.Scene{
         }, this);
 
         this.changeGravAndDir = this.time.addEvent({
-            delay: 5000,
+            delay: 10000,
             callback: this.changeGravityAndDirection,
             callbackScope: this,
             loop: true
@@ -67,12 +67,29 @@ class Play extends Phaser.Scene{
 
         this.playerFSM.step();
 
+        const flowVec = directions[currentDirection];
+
+        if(flowVec.x !== 0) {
+            this.background.tilePositionX += (flowVec.x * this.scrollSpeed * dt);
+        } else {
+            this.background.tilePositionY += (flowVec.y * this.scrollSpeed * dt);
+        }
+
         this.background.tilePositionX += this.player.scrollSpeed * dt;
 
         // Move platforms to create scrolling effect
         const platforms = this.platforms.getChildren();
+        const gravityVec = gravityDir[currentGravity];
         for (const p of platforms) {
-            p.x -= this.scrollSpeed * dt;
+            p.x -= (flowVec.x * this.scrollSpeed * dt);
+            p.y -= (flowVec.y * this.scrollSpeed * dt);
+
+            if(flowVec.x > 0 && p.x + p.width < 0) p.x = width;
+            else if (flowVec.x < 0 && p.x > width) p.x = -p.width;
+            
+            if (flowVec.y > 0 && p.y + p.height < 0) p.y = height;
+            else if (flowVec.y < 0 && p.y > height) p.y = -p.height;
+            //p.x -= this.scrollSpeed * dt;
         }
 
         let rightMostX = -Infinity;
@@ -103,6 +120,9 @@ class Play extends Phaser.Scene{
         let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
         currentGravity = newGravity;
 
+        this.player.setAngle(gravityAngles[currentGravity]);
+        //this.background.setAngle(gravityAngles[currentDirection]);
+
         // Filter directions to only those perpendicular to the new gravity
         // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
         const validDirections = Object.keys(directions).filter(d => {
@@ -117,6 +137,23 @@ class Play extends Phaser.Scene{
 
         const strength = 500;
         this.physics.world.gravity.set(gravityDir[newGravity].x * strength, gravityDir[newGravity].y * strength);
+
+        const platforms = this.platforms.getChildren();
+        platforms.forEach((p, index) => {
+            if (currentGravity === 'down') {
+                p.setAngle(0);
+                p.setPosition(index * 900, height - 50);
+            } else if (currentGravity === 'up') {
+                p.setAngle(180);
+                p.setPosition(index * 900, 50);
+            } else if(currentGravity === 'left') {
+                p.setAngle(90);
+                p.setPosition(50, index * 900);
+            } else if (currentGravity === 'right') {
+                p.setAngle(-90);
+                p.setPosition(width - 50, index * 900);
+            }
+        })
 
         console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
 
