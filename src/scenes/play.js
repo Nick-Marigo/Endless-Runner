@@ -36,7 +36,7 @@ class Play extends Phaser.Scene{
         const count = Math.ceil(width / platformWidth) + 2;
 
         for(let i = 0; i < count; i++) {
-            const p = this.platforms.create(i * platformWidth, y, 'platform').setOrigin(0, 0.5);
+            const p = this.platforms.create(i * platformWidth, y, 'platform').setOrigin(0.5, 0.5);
             p.setImmovable(true);
             p.body.allowGravity = false;
             p.body.moves = false;
@@ -139,18 +139,25 @@ class Play extends Phaser.Scene{
         this.physics.world.gravity.set(gravityDir[newGravity].x * strength, gravityDir[newGravity].y * strength);
 
         const platforms = this.platforms.getChildren();
+        const spacing = 900;
         platforms.forEach((p, index) => {
+            p.setAngle(gravityAngles[currentGravity]);
+
+            if(currentGravity === 'left' || currentGravity === 'right') {
+                p.body.setSize(p.height, p.width);
+            } else {
+                p.body.setSize(p.width, p.height);
+            }
+
+            p.body.updateFromGameObject();
+
             if (currentGravity === 'down') {
-                p.setAngle(0);
                 p.setPosition(index * 900, height - 50);
             } else if (currentGravity === 'up') {
-                p.setAngle(180);
                 p.setPosition(index * 900, 50);
             } else if(currentGravity === 'left') {
-                p.setAngle(90);
                 p.setPosition(50, index * 900);
             } else if (currentGravity === 'right') {
-                p.setAngle(-90);
                 p.setPosition(width - 50, index * 900);
             }
         })
