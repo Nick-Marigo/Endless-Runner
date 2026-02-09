@@ -168,6 +168,8 @@ class Play extends Phaser.Scene{
             }
         })
 
+        
+
         console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
 
     }

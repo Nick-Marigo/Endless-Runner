@@ -19,8 +19,48 @@ class Platforms {
 
     updateOrientation(newGravity) {
         
+        const platforms = this.platforms.getChildren();
+        const spacing = 900;
+
+        platforms.forEach((p, index) => {
+            p.setAngle(gravityAngles[currentGravity]);
+
+            if(currentGravity === 'left' || currentGravity === 'right') {
+                p.body.setSize(p.height, p.width);
+            } else {
+                p.body.setSize(p.width, p.height);
+            }
+
+            p.body.updateFromGameObject();
+
+            if (currentGravity === 'down') {
+                p.setPosition(index * spacing, height - 50);
+            } else if (currentGravity === 'up') {
+                p.setPosition(index * spacing, 50);
+            } else if(currentGravity === 'left') {
+                p.setPosition(50, index * spacing);
+            } else if (currentGravity === 'right') {
+                p.setPosition(width - 50, index * spacing);
+            }
+        })
+
     }
 
+    update() {
+        const platforms = this.platforms.getChildren();
+        const spacing = 900;
+        const totalBuffer = platforms.length * spacing;
 
+        for (const p of platforms) {
+            p.x -= (flowVec.x * this.scrollSpeed * dt);
+            p.y -= (flowVec.y * this.scrollSpeed * dt);
+
+            if(flowVec.x > 0 && p.x < -spacing/2) p.x += totalBuffer;
+            else if (flowVec.x < 0 && p.x > width + spacing/2) p.x -= totalBuffer;
+            
+            if (flowVec.y > 0 && p.y < -spacing/2) p.y += totalBuffer;
+            else if (flowVec.y < 0 && p.y > height + spacing/2) p.y -= totalBuffer;
+        }
+    }
 
 }
