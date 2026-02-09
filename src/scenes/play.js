@@ -59,6 +59,10 @@ class Play extends Phaser.Scene{
             loop: true
         });
 
+        this.physics.world.on('worldbounds', (player) => {
+            console.log('game over');
+        })
+
     }
 
     update(time, delta){
@@ -79,19 +83,22 @@ class Play extends Phaser.Scene{
 
         // Move platforms to create scrolling effect
         const platforms = this.platforms.getChildren();
-        const gravityVec = gravityDir[currentGravity];
+        const spacing = 900;
+        const totalBuffer = platforms.length * spacing;
+        //const gravityVec = gravityDir[currentGravity];
+
         for (const p of platforms) {
             p.x -= (flowVec.x * this.scrollSpeed * dt);
             p.y -= (flowVec.y * this.scrollSpeed * dt);
 
-            if(flowVec.x > 0 && p.x + p.width < 0) p.x = width;
-            else if (flowVec.x < 0 && p.x > width) p.x = -p.width;
+            if(flowVec.x > 0 && p.x < -spacing/2) p.x += totalBuffer;
+            else if (flowVec.x < 0 && p.x > width + spacing/2) p.x -= totalBuffer;
             
-            if (flowVec.y > 0 && p.y + p.height < 0) p.y = height;
-            else if (flowVec.y < 0 && p.y > height) p.y = -p.height;
+            if (flowVec.y > 0 && p.y < -spacing/2) p.y += totalBuffer;
+            else if (flowVec.y < 0 && p.y > height + spacing/2) p.y -= totalBuffer;
         }
 
-        let rightMostX = -Infinity;
+        /*let rightMostX = -Infinity;
         for(const p of platforms) rightMostX = Math.max(rightMostX, p.x);
 
         const platformWidth = 900;
@@ -101,7 +108,7 @@ class Play extends Phaser.Scene{
                 p.x = rightMostX + platformWidth;
                 rightMostX = p.x;
             }
-        }
+        }*/
 
         if(this.player.x < 0) {
             console.log("Game Over");
@@ -138,6 +145,7 @@ class Play extends Phaser.Scene{
 
         const platforms = this.platforms.getChildren();
         const spacing = 900;
+
         platforms.forEach((p, index) => {
             p.setAngle(gravityAngles[currentGravity]);
 
@@ -150,13 +158,13 @@ class Play extends Phaser.Scene{
             p.body.updateFromGameObject();
 
             if (currentGravity === 'down') {
-                p.setPosition(index * 900, height - 50);
+                p.setPosition(index * spacing, height - 50);
             } else if (currentGravity === 'up') {
-                p.setPosition(index * 900, 50);
+                p.setPosition(index * spacing, 50);
             } else if(currentGravity === 'left') {
-                p.setPosition(50, index * 900);
+                p.setPosition(50, index * spacing);
             } else if (currentGravity === 'right') {
-                p.setPosition(width - 50, index * 900);
+                p.setPosition(width - 50, index * spacing);
             }
         })
 
