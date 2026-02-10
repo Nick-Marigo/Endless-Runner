@@ -28,24 +28,12 @@ class Play extends Phaser.Scene{
 
         this.scrollSpeed = 100;
 
-        this.platforms = this.physics.add.group({ immovable: true, allowGravity: false });
-
-        const platformWidth = 900;
-        const y = height - 50;
-
-        const count = Math.ceil(width / platformWidth) + 2;
-
-        for(let i = 0; i < count; i++) {
-            const p = this.platforms.create(i * platformWidth, y, 'platform').setOrigin(0.5, 0.5);
-            p.setImmovable(true);
-            p.body.allowGravity = false;
-            p.body.moves = false;
-        }
+        this.platforms = new Platforms(this, 5, 900);
 
         this.player = new Player(this, width / 2, 650, 'player', 0, 'right');
         this.player.setDisplaySize(48, 64);
 
-        this.physics.add.collider(this.player, this.platforms);
+        this.physics.add.collider(this.player, this.platforms.group);
 
         this.input.keyboard.on('keydown-G', () => {
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true;
@@ -59,8 +47,10 @@ class Play extends Phaser.Scene{
             loop: true
         });
 
-        this.physics.world.on('worldbounds', (player) => {
+        this.physics.world.on('worldbounds', (body) => {
+            if (body.gameObject === this.player) {
             console.log('game over');
+            }
         })
 
     }
@@ -79,43 +69,13 @@ class Play extends Phaser.Scene{
             this.background.tilePositionY += (flowVec.y * this.scrollSpeed * dt);
         }
 
-        this.background.tilePositionX += this.player.scrollSpeed * dt;
+        // Platform update
+        this.platforms.update(dt, this.scrollSpeed, currentDirection);
 
-        // Move platforms to create scrolling effect
-        const platforms = this.platforms.getChildren();
-        const spacing = 900;
-        const totalBuffer = platforms.length * spacing;
-        //const gravityVec = gravityDir[currentGravity];
+        //if(this.player.body.blocked.up || this.player.body.blocked.down || this.player.body.blocked.left || this.player.body.blocked.right) {
+          //  console.log("Game Over");
+        //}
 
-        for (const p of platforms) {
-            p.x -= (flowVec.x * this.scrollSpeed * dt);
-            p.y -= (flowVec.y * this.scrollSpeed * dt);
-
-            if(flowVec.x > 0 && p.x < -spacing/2) p.x += totalBuffer;
-            else if (flowVec.x < 0 && p.x > width + spacing/2) p.x -= totalBuffer;
-            
-            if (flowVec.y > 0 && p.y < -spacing/2) p.y += totalBuffer;
-            else if (flowVec.y < 0 && p.y > height + spacing/2) p.y -= totalBuffer;
-        }
-
-        /*let rightMostX = -Infinity;
-        for(const p of platforms) rightMostX = Math.max(rightMostX, p.x);
-
-        const platformWidth = 900;
-        
-        for(const p of platforms) {
-            if(p.x + platformWidth < 0) {
-                p.x = rightMostX + platformWidth;
-                rightMostX = p.x;
-            }
-        }*/
-
-        if(this.player.x < 0) {
-            console.log("Game Over");
-
-        }
-
-        //console.log(`VelX: ${this.player.body.velocity.x}, AccelX: ${this.player.body.acceleration.x}`);
     }
 
     changeGravityAndDirection() {
@@ -126,7 +86,6 @@ class Play extends Phaser.Scene{
         currentGravity = newGravity;
 
         this.player.setAngle(gravityAngles[currentGravity]);
-        //this.background.setAngle(gravityAngles[currentDirection]);
 
         // Filter directions to only those perpendicular to the new gravity
         // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
@@ -143,32 +102,7 @@ class Play extends Phaser.Scene{
         const strength = 500;
         this.physics.world.gravity.set(gravityDir[newGravity].x * strength, gravityDir[newGravity].y * strength);
 
-        const platforms = this.platforms.getChildren();
-        const spacing = 900;
-
-        platforms.forEach((p, index) => {
-            p.setAngle(gravityAngles[currentGravity]);
-
-            if(currentGravity === 'left' || currentGravity === 'right') {
-                p.body.setSize(p.height, p.width);
-            } else {
-                p.body.setSize(p.width, p.height);
-            }
-
-            p.body.updateFromGameObject();
-
-            if (currentGravity === 'down') {
-                p.setPosition(index * spacing, height - 50);
-            } else if (currentGravity === 'up') {
-                p.setPosition(index * spacing, 50);
-            } else if(currentGravity === 'left') {
-                p.setPosition(50, index * spacing);
-            } else if (currentGravity === 'right') {
-                p.setPosition(width - 50, index * spacing);
-            }
-        })
-
-        
+        this.platforms.updateOrientation(currentGravity);
 
         console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
 

@@ -2,6 +2,7 @@ class Platforms {
     constructor(scene, count = 5, spacing = 900) {
         this.scene = scene;
         this.spacing = spacing;
+
         this.group = scene.physics.add.group({
             immovable: true,
             allowGravity: false
@@ -18,48 +19,42 @@ class Platforms {
     }
 
     updateOrientation(newGravity) {
-        
-        const platforms = this.platforms.getChildren();
-        const spacing = 900;
+
+        const platforms = this.group.getChildren();
 
         platforms.forEach((p, index) => {
-            p.setAngle(gravityAngles[currentGravity]);
+            p.setAngle(gravityAngles[newGravity]);
 
-            if(currentGravity === 'left' || currentGravity === 'right') {
+            if(newGravity === 'left' || newGravity === 'right') {
                 p.body.setSize(p.height, p.width);
+                const startX = (newGravity === 'left') ? 50 : width - 50;
+                p.setPosition(startX, (index - 1) * this.spacing);
             } else {
                 p.body.setSize(p.width, p.height);
+                const startY = (newGravity === 'down') ? height - 50 : 50;
+                p.setPosition((index - 1) * this.spacing, startY);
             }
 
             p.body.updateFromGameObject();
 
-            if (currentGravity === 'down') {
-                p.setPosition(index * spacing, height - 50);
-            } else if (currentGravity === 'up') {
-                p.setPosition(index * spacing, 50);
-            } else if(currentGravity === 'left') {
-                p.setPosition(50, index * spacing);
-            } else if (currentGravity === 'right') {
-                p.setPosition(width - 50, index * spacing);
-            }
-        })
+        });
 
     }
 
-    update() {
-        const platforms = this.platforms.getChildren();
-        const spacing = 900;
-        const totalBuffer = platforms.length * spacing;
+    update(dt, scrollSpeed, direction) {
+        const platforms = this.group.getChildren();
+        const flowVec = directions[direction];
+        const totalBuffer = platforms.length * this.spacing;
 
         for (const p of platforms) {
-            p.x -= (flowVec.x * this.scrollSpeed * dt);
-            p.y -= (flowVec.y * this.scrollSpeed * dt);
+            p.x -= (flowVec.x * scrollSpeed * dt);
+            p.y -= (flowVec.y * scrollSpeed * dt);
 
-            if(flowVec.x > 0 && p.x < -spacing/2) p.x += totalBuffer;
-            else if (flowVec.x < 0 && p.x > width + spacing/2) p.x -= totalBuffer;
+            if(flowVec.x > 0 && p.x < -this.spacing/2) p.x += totalBuffer;
+            else if (flowVec.x < 0 && p.x > this.scene.width + this.spacing/2) p.x -= totalBuffer;
             
-            if (flowVec.y > 0 && p.y < -spacing/2) p.y += totalBuffer;
-            else if (flowVec.y < 0 && p.y > height + spacing/2) p.y -= totalBuffer;
+            if (flowVec.y > 0 && p.y < -this.spacing/2) p.y += totalBuffer;
+            else if (flowVec.y < 0 && p.y > this.scene.height + this.spacing/2) p.y -= totalBuffer;
         }
     }
 

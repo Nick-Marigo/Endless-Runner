@@ -6,6 +6,7 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.body.setCollideWorldBounds(true);
+        this.body.onWorldBounds = true;
 
         this.direction = direction;
 
