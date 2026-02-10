@@ -12,6 +12,7 @@ class Play extends Phaser.Scene{
 
         this.load.image('background', './assets/AlphaBackground.png');
         this.load.image('platform', './assets/Platform.png');
+        this.load.image('portal', './assets/debugportal.png');
 
     }
 
@@ -40,12 +41,12 @@ class Play extends Phaser.Scene{
             this.physics.world.debugGraphic.clear();
         }, this);
 
-        this.changeGravAndDir = this.time.addEvent({
+        /*this.changeGravAndDir = this.time.addEvent({
             delay: 10000,
             callback: this.changeGravityAndDirection,
             callbackScope: this,
             loop: true
-        });
+        });*/
 
         this.physics.world.on('worldbounds', (body) => {
             if (body.gameObject === this.player) {
@@ -53,9 +54,21 @@ class Play extends Phaser.Scene{
             }
         })
 
+        this.portal = null;
+        this.isTransitioning = false;
+
+        this.portalTimer = this.time.addEvent({
+            delay: 10000,
+            callback: this.spawnPortal,
+            callbackScope: this,
+            loop: true
+        });
+
     }
 
     update(time, delta){
+
+        //if(this.isTransitioning) return;
 
         const dt = delta / 1000;
 
@@ -69,12 +82,24 @@ class Play extends Phaser.Scene{
             this.background.tilePositionY += (flowVec.y * this.scrollSpeed * dt);
         }
 
+        if(this.portal && this.portal.active) {
+            const flowVec = directions[currentDirection];
+            this.portal.x -= (flowVec.x * this.scrollSpeed * dt);
+            this.portal.y -= (flowVec.y * this.scrollSpeed * dt);
+        }
+
         // Platform update
         this.platforms.update(dt, this.scrollSpeed, currentDirection);
 
-        //if(this.player.body.blocked.up || this.player.body.blocked.down || this.player.body.blocked.left || this.player.body.blocked.right) {
-          //  console.log("Game Over");
-        //}
+        if (this.exitPortalObj && this.exitPortalObj.active) {
+            this.exitPortalObj.x -= (flowVec.x * this.scrollSpeed * dt);
+            this.exitPortalObj.y -= (flowVec.y * this.scrollSpeed * dt);
+
+            if (this.exitPortalObj.x < -200 || this.exitPortalObj.x > width + 200 || this.exitPortalObj.y < -200 || this.exitPortalObj.y > height + 200) {
+                this.exitPortalObj.destroy();
+                this.isTransitioning = false;
+            }
+        }
 
     }
 
@@ -106,6 +131,84 @@ class Play extends Phaser.Scene{
 
         console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
 
+    }
+
+    spawnPortal() {
+        if(this.isTransitioning) return;
+
+        const flowVec = directions[currentDirection];
+        let spawnX, spawnY;
+        const offset = 200;
+
+        if(currentGravity === 'down' || currentGravity === 'up') {
+            spawnY = (currentGravity === 'down') ? height - offset : offset;
+            spawnX = (flowVec.x > 0) ? width + 50 : -50;
+        } else {
+            spawnX = (currentGravity === 'left') ? offset : width - offset;
+            spawnY = (flowVec.y > 0) ? height + 50: -50;
+        }
+
+        console.log("Portal spawned at:", spawnX, spawnY);
+
+        this.portal = new Portal(this, spawnX, spawnY, 'portal');
+        this.portal.setDepth(100);
+
+        if (currentGravity === 'left' || currentGravity === 'right') {
+            this.portal.setAngle(90);
+            this.portal.body.setSize(this.portal.height, this.portal.width);
+        } else {
+            this.portal.setAngle(0);
+            this.portal.body.setSize(this.portal.width, this.portal.height);
+        }
+
+        this.physics.add.overlap(this.player, this.portal, this.enterPortal, null, this);
+    }
+
+    enterPortal() {
+        if(this.isTransitioning) return;
+        this.isTransitioning = true;
+        this.portal.destroy();
+
+        this.cameras.main.fadeOut(500);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.changeGravityAndDirection();
+            const offset = 200;
+            const entranceBuffer = 250;
+            let safeX = width/2;
+            let safeY = height/2;
+
+            const flowVec = directions[currentDirection];
+
+            if(currentGravity === 'down' || currentGravity === 'up') {
+                safeY = (currentGravity === 'down') ? height - offset : offset;
+                safeX = (flowVec.x > 0) ? -entranceBuffer : width + entranceBuffer;
+            } else {
+                safeX = (currentGravity === 'left') ? offset : width - offset;
+                safeY = (flowVec.y > 0) ? -entranceBuffer : height + entranceBuffer;
+            }
+
+            this.player.setPosition(safeX, safeY);
+            //this.player.body.setVelocity(0, 0);
+            this.cameras.main.fadeIn(500);
+            this.exitPortal(safeX, safeY);
+        });
+    }
+
+    exitPortal(safeX, safeY) {
+        this.exitPortalObj = this.physics.add.sprite(safeX, safeY, 'portal');
+        this.exitPortalObj.setDepth(100);
+        this.exitPortalObj.body.setAllowGravity(false);
+
+        if (currentGravity === 'left' || currentGravity === 'right') {
+            this.exitPortalObj.setAngle(90);
+        }
+
+        this.exitPortalObj.setScale(0);
+        this.tweens.add({
+            targets: this.exitPortalObj,
+            scale: 1,
+            duration: 200,
+        })
     }
 
 }
