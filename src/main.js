@@ -37,6 +37,7 @@ const gravityDir = {
 }
 
 let currentGravity = 'down';
+let newGravity;
 
 const directions = {
     left: {x: -1, y: 0},
@@ -46,6 +47,7 @@ const directions = {
 }
 
 let currentDirection = 'right';
+let newDirection;
 
 const gravityAngles = {
     down: 0,

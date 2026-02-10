@@ -56,10 +56,29 @@ class Play extends Phaser.Scene{
 
         this.portal = null;
         this.isTransitioning = false;
+        this.gravityArrow = this.add.image(width / 2, height / 2, 'arrow');
+        this.gravityArrow.setVisible(false).setDepth(99);
+        this.directionArrow = this.add.image(width / 2 + 50, height / 2, 'arrow');
+        this.directionArrow.setVisible(false).setDepth(99);
 
-        this.portalTimer = this.time.addEvent({
+        /*this.portalTimer = this.time.addEvent({
             delay: 10000,
             callback: this.spawnPortal,
+            callbackScope: this,
+            loop: true
+        });*/
+        
+        this.runTimer = this.time.addEvent({
+            delay: 5000,
+            callback : () => {
+                this.spawnArrows();
+                this.time.addEvent({
+                    delay: 5000,
+                    callback: this.spawnPortal,
+                    callbackScope: this,
+                    loop: false
+                });
+            },
             callbackScope: this,
             loop: true
         });
@@ -101,14 +120,14 @@ class Play extends Phaser.Scene{
 
     }
 
-    changeGravityAndDirection() {
+    getGraivtyAndDirection() {
         const gravityKeys = Object.keys(gravityDir);
 
         // get random gravity direction that is not the current one
-        let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
-        currentGravity = newGravity;
+        newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
+        //currentGravity = newGravity;
 
-        this.player.setAngle(gravityAngles[currentGravity]);
+        //dthis.player.setAngle(gravityAngles[currentGravity]);
 
         // Filter directions to only those perpendicular to the new gravity
         // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
@@ -119,7 +138,29 @@ class Play extends Phaser.Scene{
             return gravityVec.y !== 0 ? dirVec.x !== 0 : dirVec.y !== 0;
         });
 
-        let newDirection = Phaser.Utils.Array.GetRandom(validDirections);
+        newDirection = Phaser.Utils.Array.GetRandom(validDirections);
+        //currentDirection = newDirection;
+    }
+
+    changeGravityAndDirection() {
+        const gravityKeys = Object.keys(gravityDir);
+
+        // get random gravity direction that is not the current one
+        //let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
+        currentGravity = newGravity;
+
+        this.player.setAngle(gravityAngles[currentGravity]);
+
+        // Filter directions to only those perpendicular to the new gravity
+        // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
+        /*const validDirections = Object.keys(directions).filter(d => {
+            const gravityVec = gravityDir[newGravity];
+            const dirVec = directions[d];
+            // If gravity uses Y, direction must use X, and vice versa
+            return gravityVec.y !== 0 ? dirVec.x !== 0 : dirVec.y !== 0;
+        });*/
+
+        //let newDirection = Phaser.Utils.Array.GetRandom(validDirections);
         currentDirection = newDirection;
 
         const strength = 500;
@@ -128,6 +169,16 @@ class Play extends Phaser.Scene{
         this.platforms.updateOrientation(currentGravity);
 
         console.log(`Gravity: ${currentGravity}, Direction: ${currentDirection}`);
+
+    }
+
+    spawnArrows() {
+
+        this.getGraivtyAndDirection();
+        this.gravityArrow.setVisible(true);
+        this.gravityArrow.setAngle(gravityAngles[currentGravity]);
+        this.directionArrow.setVisible(true);
+        this.directionArrow.setAngle(gravityAngles[currentDirection]);
 
     }
 
@@ -166,6 +217,8 @@ class Play extends Phaser.Scene{
         if(this.isTransitioning) return;
         this.isTransitioning = true;
         this.portal.destroy();
+        this.gravityArrow.setVisible(false);
+        this.directionArrow.setVisible(false);
 
         this.cameras.main.fadeOut(500);
         this.cameras.main.once('camerafadeoutcomplete', () => {
