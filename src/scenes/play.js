@@ -68,8 +68,6 @@ class Play extends Phaser.Scene{
 
     update(time, delta){
 
-        //if(this.isTransitioning) return;
-
         const dt = delta / 1000;
 
         this.playerFSM.step();
@@ -172,23 +170,22 @@ class Play extends Phaser.Scene{
         this.cameras.main.fadeOut(500);
         this.cameras.main.once('camerafadeoutcomplete', () => {
             this.changeGravityAndDirection();
-            const offset = 200;
-            const entranceBuffer = 250;
-            let safeX = width/2;
-            let safeY = height/2;
 
             const flowVec = directions[currentDirection];
+            const floorOffset = 350;
+            const progressOffset = 0.33;
+            let safeX, safeY;
 
             if(currentGravity === 'down' || currentGravity === 'up') {
-                safeY = (currentGravity === 'down') ? height - offset : offset;
-                safeX = (flowVec.x > 0) ? -entranceBuffer : width + entranceBuffer;
+                safeY = (currentGravity === 'down') ? height - floorOffset : floorOffset;
+                safeX = (flowVec.x > 0) ? width * progressOffset : width * (1 - progressOffset);
             } else {
-                safeX = (currentGravity === 'left') ? offset : width - offset;
-                safeY = (flowVec.y > 0) ? -entranceBuffer : height + entranceBuffer;
+                safeX = (currentGravity === 'left') ? floorOffset : width - floorOffset;
+                safeY = (flowVec.y > 0) ? height * progressOffset : height * (1 - progressOffset);
             }
 
             this.player.setPosition(safeX, safeY);
-            //this.player.body.setVelocity(0, 0);
+            this.player.body.setVelocity(0, 0);
             this.cameras.main.fadeIn(500);
             this.exitPortal(safeX, safeY);
         });
@@ -200,7 +197,7 @@ class Play extends Phaser.Scene{
         this.exitPortalObj.body.setAllowGravity(false);
 
         if (currentGravity === 'left' || currentGravity === 'right') {
-            this.exitPortalObj.setAngle(90);
+            this.exitPortalObj.setAngle(gravityAngles[currentGravity]);
         }
 
         this.exitPortalObj.setScale(0);
