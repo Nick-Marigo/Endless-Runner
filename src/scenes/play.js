@@ -85,7 +85,7 @@ class Play extends Phaser.Scene{
 
         this.obstacleTimer = this.time.addEvent({
             delay: 2000,
-            callback: this.spawnObstacle(),
+            callback: this.spawnObstacle,
             callbackScope: this,
             loop: true
         });
@@ -176,7 +176,7 @@ class Play extends Phaser.Scene{
         currentDirection = newDirection;
 
         const strength = 500;
-        this.physics.world.gravity.set(gravityDir[newGravity].x * strength, gravityDir[newGravity].y * strength);
+        this.physics.world.gravity.set(gravityDir[currentGravity].x * strength, gravityDir[currentGravity].y * strength);
 
         this.platforms.updateOrientation(currentGravity);
 
@@ -279,11 +279,11 @@ class Play extends Phaser.Scene{
     }
 
     startCycle() {
-        this.runTimer = this.time.delayedCall(5000, () => {
+        this.runTimer = this.time.delayedCall(15000, () => {
             this.spawnArrows();
         })
 
-        this.portalTimer = this.time.delayedCall(5000, () => {
+        this.portalTimer = this.time.delayedCall(20000, () => {
             this.spawnPortal();
         })
     }
@@ -292,6 +292,7 @@ class Play extends Phaser.Scene{
         if (this.isTransitioning) return;
 
         const flowVec = directions[currentDirection];
+        if(!flowVec) return;
         const floorOffset = 64;
         let spawnX, spawnY;
 
@@ -305,19 +306,19 @@ class Play extends Phaser.Scene{
 
         const type = Math.random() > 0.3 ? 'spikes' : 'bar';
         const obs = new Obstacle(this, spawnX, spawnY, type);
-
         obs.setAngle(gravityAngles[currentGravity]);
 
-        if(type === 'bar') {
-            const floatDist = 80;
+        const pushDist = 32;
+        const barGap = 90;
 
-            switch(currentGravity) {
-                case 'down': obs.y -= floatDist;
-                case 'up': obs.y += floatDist;
-                case 'left': obs.x += floatDist;
-                case 'right': obs.x -= floatDist;
-            }
-
+        if(currentGravity === 'down') {
+            obs.y -= (type === 'bar') ? barGap : pushDist;
+        } else if(currentGravity === 'up') {
+            obs.y += (type === 'bar') ? barGap : pushDist;
+        } else if(currentGravity === 'left') {
+            obs.x += (type === 'bar') ? barGap : pushDist;
+        } else if(currentGravity === 'right') {
+            obs.x -= (type === 'bar') ? barGap : pushDist;
         }
 
         this.obstacleGroup.add(obs);

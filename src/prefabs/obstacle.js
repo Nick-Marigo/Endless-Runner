@@ -8,12 +8,19 @@ class Obstacle extends Phaser.Physics.Arcade.Sprite{
         this.setDepth(50);
     }
 
-    update(dt, scrollSpeed, direction) {
-        const flowVec = directions[direction];
-        this.x -= (flowVec.x * scrollSpeed * dt);
-        this.y -= (flowVec.y * scrollSpeed * dt);
+    update(time, delta) {
+        const dt = delta / 1000;
+        const scene = this.scene;
 
-        if(this.x < -100 || this.x > width + 100 || this.y < -100 || this.y > height + 100) {
+        const flowVec = directions[currentDirection];
+        const scrollSpeed = scene.scrollSpeed;
+
+        if (flowVec) {
+            this.x -= (flowVec.x * scrollSpeed * dt);
+            this.y -= (flowVec.y * scrollSpeed * dt);
+        }
+
+        if(this.x < -200 || this.x > width + 200 || this.y < -200 || this.y > height + 200) {
             this.destroy();
         }
     }
