@@ -279,11 +279,11 @@ class Play extends Phaser.Scene{
     }
 
     startCycle() {
-        this.runTimer = this.time.delayedCall(15000, () => {
+        this.runTimer = this.time.delayedCall(10000, () => {
             this.spawnArrows();
         })
 
-        this.portalTimer = this.time.delayedCall(20000, () => {
+        this.portalTimer = this.time.delayedCall(12500, () => {
             this.spawnPortal();
         })
     }
