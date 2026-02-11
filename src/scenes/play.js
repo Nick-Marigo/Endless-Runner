@@ -13,10 +13,34 @@ class Play extends Phaser.Scene{
         this.load.image('background', './assets/AlphaBackground.png');
         this.load.image('platform', './assets/Platform.png');
         this.load.image('portal', './assets/debugportal.png');
+        this.load.spritesheet('gravityArrow', './assets/GravityArrow.png', {
+            frameWidth: 48,
+            frameHeight: 64,
+            startFrame: 0
+        });
+        this.load.spritesheet('directionArrow', './assets/DirectionArrow.png', {
+            frameWidth: 48,
+            frameHeight: 64,
+            startFrame: 0
+        });
 
     }
 
     create(){
+
+        this.anims.create({
+            key: 'gravityArrowBlink',
+            frames: this.anims.generateFrameNumbers('gravityArrow', {start: 0, end: 1}),
+            frameRate: 6,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'directionArrowBlink',
+            frames: this.anims.generateFrameNumbers('directionArrow', {start: 0, end: 1}),
+            frameRate: 6,
+            repeat: -1
+        });
 
         this.background = this.add.tileSprite(0, 0, width, height, 'background').setOrigin(0, 0);
 
@@ -56,32 +80,13 @@ class Play extends Phaser.Scene{
 
         this.portal = null;
         this.isTransitioning = false;
-        this.gravityArrow = this.add.image(width / 2, height / 2, 'arrow');
+        this.gravityArrow = this.add.sprite(width / 2, height / 2, 'gravityArrow');
         this.gravityArrow.setVisible(false).setDepth(99);
-        this.directionArrow = this.add.image(width / 2 + 50, height / 2, 'arrow');
+        this.directionArrow = this.add.sprite(width / 2 + 50, height / 2, 'directionArrow');
         this.directionArrow.setVisible(false).setDepth(99);
 
-        /*this.portalTimer = this.time.addEvent({
-            delay: 10000,
-            callback: this.spawnPortal,
-            callbackScope: this,
-            loop: true
-        });*/
-        
-        this.runTimer = this.time.addEvent({
-            delay: 5000,
-            callback : () => {
-                this.spawnArrows();
-                this.time.addEvent({
-                    delay: 5000,
-                    callback: this.spawnPortal,
-                    callbackScope: this,
-                    loop: false
-                });
-            },
-            callbackScope: this,
-            loop: true
-        });
+        //Starts Cycle for direction arrows and spawning portal
+        this.startCycle();
 
     }
 
@@ -176,9 +181,11 @@ class Play extends Phaser.Scene{
 
         this.getGraivtyAndDirection();
         this.gravityArrow.setVisible(true);
-        this.gravityArrow.setAngle(gravityAngles[currentGravity]);
+        this.gravityArrow.play('gravityArrowBlink');
+        this.gravityArrow.setAngle(gravityAngles[newGravity] - 180);
         this.directionArrow.setVisible(true);
-        this.directionArrow.setAngle(gravityAngles[currentDirection]);
+        this.directionArrow.play('directionArrowBlink');
+        this.directionArrow.setAngle(gravityAngles[newDirection] - 180);
 
     }
 
@@ -258,6 +265,19 @@ class Play extends Phaser.Scene{
             targets: this.exitPortalObj,
             scale: 1,
             duration: 200,
+        })
+
+        this.startCycle();
+
+    }
+
+    startCycle() {
+        this.runTimer = this.time.delayedCall(5000, () => {
+            this.spawnArrows();
+        })
+
+        this.portalTimer = this.time.delayedCall(5000, () => {
+            this.spawnPortal();
         })
     }
 
