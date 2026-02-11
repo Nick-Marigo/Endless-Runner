@@ -8,8 +8,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.setCollideWorldBounds(true);
         this.body.onWorldBounds = true;
 
+        this.w = 48;
+        this.h = 64;
         this.direction = direction;
-
+        
+        this.speedMultiplier = 1.0;
         this.scrollSpeed = 100;
         this.playerMoveVelocity = 300;
 
@@ -70,6 +73,19 @@ class Player extends Phaser.Physics.Arcade.Sprite {
         return false;
     }
 
+    refreshBody() {
+        this.setAngle(gravityAngles[currentGravity]);
+
+        this.body.setOffset(0, 0);
+
+        if(currentGravity === 'left' || currentGravity === 'right') {
+            this.body.setSize(this.h, this.w);
+        } else {
+            this.body.setSize(this.w, this.h);
+        }
+        this.body.setOffset(0, 0);
+    }
+
 }
 
 class RunState extends State {
@@ -80,6 +96,17 @@ class RunState extends State {
         /*player.body.setSize(player.width, player.height);
         player.body.setOffset(0, 0);
         player.anims.play('run-' + player.direction, true);*/
+
+        const pushAmount = player.h / 2;
+
+        switch(currentGravity) {
+            case 'down': player.y -= pushAmount;
+            case 'up': player.y += pushAmount;
+            case 'left': player.x += pushAmount;
+            case 'right': player.x -= pushAmount;
+        }
+
+        player.refreshBody();
     }
 
     execute(scene, player) {
@@ -124,9 +151,23 @@ class SlideState extends State {
         player.isSliding = true;
 
         // adjust size/offset for slide
-        /*player.body.setSize();
-        player.body.setOffset();
-        player.anims.play('slide-' + player.direction, true);*/
+        if (currentGravity === 'down' || currentGravity === 'up') {
+            player.body.setSize(player.w, player.h / 2);
+            if (currentGravity === 'down') {
+                player.body.setOffset(0, player.h / 2); 
+            } else {
+                player.body.setOffset(0, 0);
+            }
+        } else {
+            player.body.setSize(player.w / 2, player.h);
+            if (currentGravity === 'right') {
+                player.body.setOffset(player.w / 2, 0);
+            } else {
+                player.body.setOffset(0, 0);
+            }
+        }
+        //player.body.setOffset();
+       // player.anims.play('slide-' + player.direction, true);
     }
 
     execute(scene, player) {

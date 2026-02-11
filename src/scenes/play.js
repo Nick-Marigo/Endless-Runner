@@ -56,7 +56,7 @@ class Play extends Phaser.Scene{
         this.platforms = new Platforms(this, 5, 900);
 
         this.player = new Player(this, width / 2, 650, 'player', 0, 'right');
-        this.player.setDisplaySize(48, 64);
+        //this.player.setDisplaySize(48, 64);
 
         this.physics.add.collider(this.player, this.platforms.group);
 
@@ -64,13 +64,6 @@ class Play extends Phaser.Scene{
             this.physics.world.drawDebug = this.physics.world.drawDebug ? false : true;
             this.physics.world.debugGraphic.clear();
         }, this);
-
-        /*this.changeGravAndDir = this.time.addEvent({
-            delay: 10000,
-            callback: this.changeGravityAndDirection,
-            callbackScope: this,
-            loop: true
-        });*/
 
         this.physics.world.on('worldbounds', (body) => {
             if (body.gameObject === this.player) {
@@ -87,6 +80,20 @@ class Play extends Phaser.Scene{
 
         //Starts Cycle for direction arrows and spawning portal
         this.startCycle();
+
+        this.obstacleGroup = this.add.group({ runChildUpdate: true});
+
+        this.obstacleTimer = this.time.addEvent({
+            delay: 2000,
+            callback: this.spawnObstacle(),
+            callbackScope: this,
+            loop: true
+        });
+
+        this.physics.add.overlap(this.player, this.obstacleGroup, () => {
+            console.log("Hit Obstacle. Game Over!");
+
+        }, null, this);
 
     }
 
@@ -154,7 +161,7 @@ class Play extends Phaser.Scene{
         //let newGravity = Phaser.Utils.Array.GetRandom(gravityKeys.filter(g => g !== currentGravity));
         currentGravity = newGravity;
 
-        this.player.setAngle(gravityAngles[currentGravity]);
+        this.player.refreshBody();
 
         // Filter directions to only those perpendicular to the new gravity
         // If gravity is 'up' or 'down' (y != 0), direction must be 'left' or 'right' (x != 0)
@@ -279,6 +286,42 @@ class Play extends Phaser.Scene{
         this.portalTimer = this.time.delayedCall(5000, () => {
             this.spawnPortal();
         })
+    }
+
+    spawnObstacle() {
+        if (this.isTransitioning) return;
+
+        const flowVec = directions[currentDirection];
+        const floorOffset = 64;
+        let spawnX, spawnY;
+
+        if(currentGravity === 'down' || currentGravity === 'up') {
+            spawnY = (currentGravity === 'down') ? height - floorOffset : floorOffset;
+            spawnX = (flowVec.x > 0) ? width + 50: -50;
+        } else {
+            spawnX = (currentGravity === 'left') ? floorOffset : width - floorOffset;
+            spawnY = (flowVec.y > 0) ? height + 50 : -50;
+        }
+
+        const type = Math.random() > 0.3 ? 'spikes' : 'bar';
+        const obs = new Obstacle(this, spawnX, spawnY, type);
+
+        obs.setAngle(gravityAngles[currentGravity]);
+
+        if(type === 'bar') {
+            const floatDist = 80;
+
+            switch(currentGravity) {
+                case 'down': obs.y -= floatDist;
+                case 'up': obs.y += floatDist;
+                case 'left': obs.x += floatDist;
+                case 'right': obs.x -= floatDist;
+            }
+
+        }
+
+        this.obstacleGroup.add(obs);
+
     }
 
 }
